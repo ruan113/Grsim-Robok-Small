@@ -14,8 +14,7 @@
 #include "grSim_Packet.pb.h"
 #include "grSim_Commands.pb.h"
 #include "grSim_Replacement.pb.h"
-#include "teste.h"
-
+#include "fieldstate.h"
 
 class MainWindow : public QDialog
 {
@@ -30,7 +29,7 @@ public slots:
     void sendBtnClicked();
     void resetBtnClicked();
     void disconnectUdp();
-    void updateFunction();
+    void updateRobots();
 private:
     bool sending, reseting;
     QUdpSocket udpsocket;

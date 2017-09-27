@@ -3,12 +3,21 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <string>
+#include <vector>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent),
     udpsocket(this)
 {
+    //Titulo da tela
+    this->setWindowTitle(QString("Robok Small Simulator - v1.0"));
+
+    //----------------Inicialização dos componentes---------//
+
+    //Tipo de Layout da tela(MainWindow)
     QGridLayout* layout = new QGridLayout(this);
+
+    //Caixas de text para edição
     edtIp = new QLineEdit("127.0.0.1", this);
     edtPort = new QLineEdit("20011", this);
     edtId = new QLineEdit("0", this);
@@ -22,8 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
     edtChip = new QLineEdit("0", this);
     edtKick = new QLineEdit("0", this);
 
-    this->setWindowTitle(QString("grSim Sample Client - v 1.0"));
-
+    //Labels
     lblIp = new QLabel("Simulator Address", this);
     lblPort = new QLabel("Simulator Port", this);
     lblId = new QLabel("Id", this);
@@ -34,23 +42,40 @@ MainWindow::MainWindow(QWidget *parent)
     lblV2 = new QLabel("Wheel2 (rad/s)", this);
     lblV3 = new QLabel("Wheel3 (rad/s)", this);
     lblV4 = new QLabel("Wheel4 (rad/s)", this);
+    lblChip = new QLabel("Chip (m/s)", this);
+    lblKick = new QLabel("Kick (m/s)", this);
+
+    //ComboBox
     cmbTeam = new QComboBox(this);
     cmbTeam->addItem("Yellow");
     cmbTeam->addItem("Blue");
-    lblChip = new QLabel("Chip (m/s)", this);
-    lblKick = new QLabel("Kick (m/s)", this);
+
+    //TextArea
     txtInfo = new QTextEdit(this);
+
+    //CheckBox
     chkVel = new QCheckBox("Send Velocity? (or wheels)", this);
     chkSpin = new QCheckBox("Spin", this);
+
+    //Botões
     btnSend = new QPushButton("Send", this);
     btnReset = new QPushButton("Reset", this);
     btnConnect = new QPushButton("Connect", this);
-    txtInfo->setReadOnly(true);
-    txtInfo->setHtml("This program is part of <b>grSim RoboCup SSL Simulator</b> package.<br />For more information please refer to <a href=\"http://eew.aut.ac.ir/~parsian/grsim/\">http://eew.aut.ac.ir/~parsian/grsim</a><br /><font color=\"gray\">This program is free software under the terms of GNU General Public License Version 3.</font>");
+
+    //Mostra as informações dos robos na tela do cliente (debug mode)
+    txtInfo->setReadOnly(true);//Seta permissão semente para leitura
+    txtInfo->setHtml("Robo 1: 0\nRobo 2: 0\nRobo 3: 0\nRobo 4: 0\nRobo 5: 0\nRobo 6: 0");
     txtInfo->setFixedHeight(70);
+
+    //---------------------Adição dos componentes na tela---------------------//
+
+    //obs: Ao meu ver ele funciona assim:
+    //layout->addWidget(componente, linha, coluna, tamanho(y), comprimento(x));
+
     layout->addWidget(lblIp, 1, 1, 1, 1);layout->addWidget(edtIp, 1, 2, 1, 1);
     layout->addWidget(lblPort, 1, 3, 1, 1);layout->addWidget(edtPort, 1, 4, 1, 1);
-    layout->addWidget(lblId, 2, 1, 1, 1);layout->addWidget(edtId, 2, 2, 1, 1);layout->addWidget(cmbTeam, 2, 3, 1, 2);
+    layout->addWidget(lblId, 2, 1, 1, 1);layout->addWidget(edtId, 2, 2, 1, 1);
+    layout->addWidget(cmbTeam, 2, 3, 1, 2);
     layout->addWidget(lblVx, 3, 1, 1, 1);layout->addWidget(edtVx, 3, 2, 1, 1);
     layout->addWidget(lblVy, 4, 1, 1, 1);layout->addWidget(edtVy, 4, 2, 1, 1);
     layout->addWidget(lblW, 5, 1, 1, 1);layout->addWidget(edtW, 5, 2, 1, 1);
@@ -61,22 +86,28 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(lblV4, 6, 3, 1, 1);layout->addWidget(edtV4, 6, 4, 1, 1);
     layout->addWidget(lblChip, 7, 1, 1, 1);layout->addWidget(edtChip, 7, 2, 1, 1);
     layout->addWidget(lblKick, 7, 3, 1, 1);layout->addWidget(edtKick, 7, 4, 1, 1);
-    layout->addWidget(chkSpin, 8, 1, 1, 4);
-    layout->addWidget(btnConnect, 9, 1, 1, 2);layout->addWidget(btnSend, 9, 3, 1, 1);layout->addWidget(btnReset, 9, 4, 1, 1);
-    layout->addWidget(txtInfo, 10, 1, 1, 4);
+    layout->addWidget(chkSpin, 8, 1, 1, 4);layout->addWidget(btnConnect, 9, 1, 1, 2);
+    layout->addWidget(btnSend, 9, 3, 1, 1);layout->addWidget(btnReset, 9, 4, 1, 1);
+    layout->addWidget(txtInfo, 10, 1, 2, 4);
+
+    //Inicializa Timer
     timer = new QTimer (this);
-    timer->setInterval(20);
+    timer->setInterval(20);//Seta seu intervalo = 20 milesegundos
+
+    //---------------Conecção dos Slots com seus respectivos Sinais----------//
+
     connect(edtIp, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(edtPort, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(timer, SIGNAL(timeout()), this, SLOT(sendPacket()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateFunction()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateRobots()));
     connect(btnConnect, SIGNAL(clicked()), this, SLOT(reconnectUdp()));
     connect(btnSend, SIGNAL(clicked()), this, SLOT(sendBtnClicked()));
     connect(btnReset, SIGNAL(clicked()), this, SLOT(resetBtnClicked()));
-    btnSend->setDisabled(true);
-    chkVel->setChecked(true);
-    sending = false;
-    reseting = false;
+
+    btnSend->setDisabled(true);//Estado inicial do botão como desativado
+    chkVel->setChecked(true);//Estado inicial como "Marcado/Selecionado"
+    sending = false;//Estado inicial é falso
+    reseting = false;//Estado inicial é falso
 }
 
 MainWindow::~MainWindow()
@@ -164,18 +195,23 @@ void MainWindow::sendPacket()
     udpsocket.writeDatagram(dgram, _addr, _port);
 }
 
-void MainWindow::updateFunction(){
-//	for(int i = 0; i<4; i++)
-	QString v[4];
-	Teste* t;
+void MainWindow::updateRobots(){
+    QString output = "ID\tOrientation\tX\tY\n";
 
-	v[0] = QString::number(t->runToBall());
-	v[1] = QString::number(t->runToBall());
-	v[2] = QString::number(t->runToBall());
-	v[3] = QString::number(t->runToBall());
+    std::vector<Robot> robot(12);
+    Fieldstate field;
 
-	edtV1->setText(v[0]); 
-	edtV2->setText(v[1]); 
-	edtV3->setText(v[2]); 
-	edtV4->setText(v[3]); 
+    field.fieldUpdate(&robot);
+
+    for(int i = 0;i<robot.size();i++){
+        Robot r = robot.at(i);
+
+        if(robot.size() != 0)
+            output += r.id+QString("\t")+r.orientation+QString("\t")+r.x+QString("\t")+r.y+QString("\n");
+        else break;
+    }
+
+    txtInfo->setText(QString::number(robot.size()));
 }
+
+

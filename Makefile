@@ -18,6 +18,7 @@ upload:
 build: mkbuilddir cmake
 	$(MAKE) -C $(BUILDDIR)
 
+
 mkbuilddir:
 	[ -d $(BUILDDIR) ] || mkdir $(BUILDDIR)
 
@@ -40,4 +41,5 @@ clean: mkkbuilddir cmake
 	
 clean-all: mkbuilddir
 	cd $(BUILDDIR) && rm -rf *
-
+run:
+	cd bin/ && ./client && ./grsim
