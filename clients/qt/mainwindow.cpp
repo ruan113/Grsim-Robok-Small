@@ -88,7 +88,7 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(lblKick, 7, 3, 1, 1);layout->addWidget(edtKick, 7, 4, 1, 1);
     layout->addWidget(chkSpin, 8, 1, 1, 4);layout->addWidget(btnConnect, 9, 1, 1, 2);
     layout->addWidget(btnSend, 9, 3, 1, 1);layout->addWidget(btnReset, 9, 4, 1, 1);
-    layout->addWidget(txtInfo, 10, 1, 2, 4);
+    layout->addWidget(txtInfo, 10, 1, 4, 4);
 
     //Inicializa Timer
     timer = new QTimer (this);
@@ -211,7 +211,7 @@ void MainWindow::updateRobots(){
         else break;
     }
 
-    txtInfo->setText(QString::number(robot.size()));
+    txtInfo->setText(output);
 }
 
 
