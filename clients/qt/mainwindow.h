@@ -11,10 +11,20 @@
 #include <QTextEdit>
 #include <QPushButton>
 #include <QtNetwork>
+#include <QUdpSocket>
+#include <vector>
+#include <QGridLayout>
+#include <QDebug>
+#include <QMessageBox>
+#include <string>
 #include "grSim_Packet.pb.h"
 #include "grSim_Commands.pb.h"
 #include "grSim_Replacement.pb.h"
+#include "messages_robocup_ssl_wrapper.pb.h"
+#include "messages_robocup_ssl_geometry.pb.h"
+#include "messages_robocup_ssl_detection.pb.h"
 #include "fieldstate.h"
+#include "../../include/net/robocup_ssl_client.h"
 
 class MainWindow : public QDialog
 {
@@ -29,7 +39,7 @@ public slots:
     void sendBtnClicked();
     void resetBtnClicked();
     void disconnectUdp();
-    void updateRobots();
+    void updateFieldState();
 private:
     bool sending, reseting;
     QUdpSocket udpsocket;
@@ -54,6 +64,8 @@ private:
     QPushButton* btnReset;
     QPushButton* btnConnect;
     QTimer* timer;
+    Fieldstate *field;
+    RoboCupSSLClient *SSL_Client;
 };
 
 #endif // MAINWINDOW_H

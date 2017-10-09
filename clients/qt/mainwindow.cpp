@@ -1,9 +1,5 @@
 #include "mainwindow.h"
-#include <QGridLayout>
-#include <QDebug>
-#include <QMessageBox>
-#include <string>
-#include <vector>
+#include <stdio.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QDialog(parent),
@@ -65,7 +61,17 @@ MainWindow::MainWindow(QWidget *parent)
     //Mostra as informações dos robos na tela do cliente (debug mode)
     txtInfo->setReadOnly(true);//Seta permissão semente para leitura
     txtInfo->setHtml("Robo 1: 0\nRobo 2: 0\nRobo 3: 0\nRobo 4: 0\nRobo 5: 0\nRobo 6: 0");
-    txtInfo->setFixedHeight(70);
+    txtInfo->setFixedHeight(300);
+
+    //FieldState
+    field = new Fieldstate();
+
+    this->SSL_Client = new RoboCupSSLClient(10020,"224.5.23.2","");
+
+    if(!this->SSL_Client->open()){
+        std::printf("Falha ao abrir a conexão com o servidor!\n");
+        return;
+    }
 
     //---------------------Adição dos componentes na tela---------------------//
 
@@ -99,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(edtIp, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(edtPort, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(timer, SIGNAL(timeout()), this, SLOT(sendPacket()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateRobots()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateFieldState()));
     connect(btnConnect, SIGNAL(clicked()), this, SLOT(reconnectUdp()));
     connect(btnSend, SIGNAL(clicked()), this, SLOT(sendBtnClicked()));
     connect(btnReset, SIGNAL(clicked()), this, SLOT(resetBtnClicked()));
@@ -112,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-
+    this->SSL_Client->close();
 }
 
 void MainWindow::disconnectUdp()
@@ -193,25 +199,69 @@ void MainWindow::sendPacket()
     dgram.resize(packet.ByteSize());
     packet.SerializeToArray(dgram.data(), dgram.size());
     udpsocket.writeDatagram(dgram, _addr, _port);
+
 }
 
-void MainWindow::updateRobots(){
-    QString output = "ID\tOrientation\tX\tY\n";
+void MainWindow::updateFieldState(){
 
-    std::vector<Robot> robot(12);
-    Fieldstate field;
+    int numBlue,numYellow;
 
-    field.fieldUpdate(&robot);
+    this->SSL_Client->changePort(30011);
 
-    for(int i = 0;i<robot.size();i++){
-        Robot r = robot.at(i);
+    SSL_WrapperPacket robotPacket;
 
-        if(robot.size() != 0)
-            output += r.id+QString("\t")+r.orientation+QString("\t")+r.x+QString("\t")+r.y+QString("\n");
-        else break;
+    if(!this->SSL_Client->receive(robotPacket)){
+        std::printf("Erro ao ler o datagrama!\n");
+        return;
+    }
+
+    if(robotPacket.has_detection()){
+        SSL_DetectionFrame detection = robotPacket.detection();
+        numBlue = detection.robots_blue_size();
+        field->fieldUpdate(&detection, 0);
+    }
+
+    this->SSL_Client->changePort(30012);
+
+    if(!this->SSL_Client->receive(robotPacket)){
+        std::printf("Erro ao ler o datagrama!\n");
+        return;
+    }
+
+    if(robotPacket.has_detection()){
+        SSL_DetectionFrame detection = robotPacket.detection();
+        numYellow = detection.robots_yellow_size();
+        field->fieldUpdate(&detection, 1);
+    }
+
+    QString output = "Confidence\tX\tY\n";
+
+    output += QString::number(field->ball.confidence)+QString("\t")
+            +QString::number(field->ball.position.x)+QString("\t")
+            +QString::number(field->ball.position.y)+QString("\n\n");
+
+    output += "ID\tOrientation\tX\tY\n";
+
+    output += "Yellow Team: \n";
+    for(int i = 0;i < numYellow;i++){
+
+        output += QString::number(field->yellow[i].id)+QString("\t")
+                +QString::number(field->yellow[i].orientation)+QString("\t")
+                +QString::number(field->yellow[i].position.x)+QString("\t")
+                +QString::number(field->yellow[i].position.y)+QString("\n");
+
+    }
+    output += "Blue Team: \n";
+    for(int i = 0;i < numBlue;i++){
+
+        output += QString::number(field->blue[i].id)+QString("\t")
+                +QString::number(field->blue[i].orientation)+QString("\t")
+                +QString::number(field->blue[i].position.x)+QString("\t")
+                +QString::number(field->blue[i].position.y)+QString("\n");
+
     }
 
     txtInfo->setText(output);
+
+
 }
-
-

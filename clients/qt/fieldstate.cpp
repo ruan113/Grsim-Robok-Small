@@ -1,43 +1,44 @@
 #include "fieldstate.h"
+#include <iostream>
 
-void Fieldstate::fieldUpdate(std::vector<Robot> *robotVector){
+#define BlueTeamStatusPort 30011
+#define YellowTeamStatusPort 30012
+#define MessageCount 4
 
-    SSL_DetectionFrame robotInfo;
+Fieldstate::Fieldstate(){
 
-    std::fstream input("../../CMakeFiles/grsim.dir/messages_robocup_ssl_detection.pb.cc.o", std::ios::in | std::ios::binary);
+}
 
-    if (!robotInfo.ParseFromIstream(&input)) {
-        return;
+void Fieldstate::fieldUpdate(SSL_DetectionFrame* detection, int num){
+
+    for(int i = 0;i < detection->balls_size();i++){
+        SSL_DetectionBall auxBall = detection->balls(i);
+
+        this->ball.confidence = auxBall.confidence();
+        this->ball.position.x = auxBall.x();
+        this->ball.position.y = auxBall.y();
     }
+    //std::printf("Leitura da bola OK\n");
+    if(num == 1){
+        for(int i = 0;i < detection->robots_yellow_size();i++){
+            SSL_DetectionRobot yellow = detection->robots_yellow(i);
 
-    robotInfo.set_frame_number(0);
-    robotInfo.set_t_capture(0);
-    robotInfo.set_t_sent(0);
-    robotInfo.set_camera_id(0);
+            this->yellow[i].id = yellow.robot_id();
+            this->yellow[i].orientation = yellow.orientation();
+            this->yellow[i].position.x = yellow.x();
+            this->yellow[i].position.y = yellow.y();
+        }
+        //std::printf("Leitura do time Amarelo OK\n");
+    }else{
+        for(int i = 0;i < detection->robots_blue_size();i++){
+            SSL_DetectionRobot blue = detection->robots_blue(i);
 
-    for(int i = 0;i<robotInfo.robots_yellow_size();i++){
-        SSL_DetectionRobot yellow = robotInfo.robots_yellow(i);
-
-        Robot robot;
-
-        robot.id = yellow.robot_id();
-        robot.orientation = yellow.orientation();
-        robot.x = yellow.x();
-        robot.y = yellow.y();
-
-        robotVector->at(i) = robot;
-    }
-
-    for(int i = 0;i<robotInfo.robots_blue_size();i++){
-        SSL_DetectionRobot blue = robotInfo.robots_blue(i);
-
-        Robot robot;
-
-        robot.id = blue.robot_id();
-        robot.orientation = blue.orientation();
-        robot.x = blue.x();
-        robot.y = blue.y();
-
-        robotVector->at(i) = robot;
+            this->blue[i].id = blue.robot_id();
+            this->blue[i].orientation = blue.orientation();
+            this->blue[i].position.x = blue.x();
+            this->blue[i].position.y = blue.y();
+        }
+        //std::printf("Leitura do time Azul OK\n");
     }
 }
+

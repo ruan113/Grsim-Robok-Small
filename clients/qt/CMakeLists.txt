@@ -19,7 +19,10 @@ protobuf_generate_cpp(PROTO_CPP PROTO_H
     ../../src/proto/grSim_Replacement.proto
     ../../src/proto/grSim_Commands.proto
     ../../src/proto/grSim_Packet.proto
+    ../../src/proto/messages_robocup_ssl_wrapper.proto
     ../../src/proto/messages_robocup_ssl_detection.proto
+    ../../src/proto/messages_robocup_ssl_geometry.proto
+    ../../src/proto/messages_robocup_ssl_refbox_log.proto
 )
 
 set(app client)
@@ -32,8 +35,8 @@ add_executable(${app} MACOSX_BUNDLE
     mainwindow.h
     fieldstate.cpp
     fieldstate.h
-    messages_robocup_ssl_detection.pb.h
-    messages_robocup_ssl_detection.pb.cc
+    ../../include/net/robocup_ssl_client.h
+    ../../src/net/robocup_ssl_client.cpp
 )
 
 target_link_libraries(${app} ${libs})
