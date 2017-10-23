@@ -23,15 +23,20 @@ struct VectorR {
 	struct VectorR operator +(const struct VectorR &A);
 	struct VectorR operator *(const UFLOAT &Q);
 	struct VectorR mpow(const UFLOAT &E);
+	struct VectorR sum_angle(const UFLOAT &A);
 	UFLOAT module();
+	UFLOAT calculateAngle(VectorR V);
+	struct Point deslocate_point(struct Point position);
+	struct VectorR normalize();
 };
 
 struct Point {
-	INT16 x;
- 	INT16 y;
+	UFLOAT x;
+ 	UFLOAT y;
  	
 	struct VectorR PointDistance(struct Point);
 };
+
 
 
 #endif

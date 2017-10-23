@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+//Bibliotecas Padrões
 #include <QtGui/QMainWindow>
 #include <QtGui/QDialog>
 #include <QLineEdit>
@@ -17,13 +18,16 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <string>
+
+//Bibliotecas Grsim
 #include "grSim_Packet.pb.h"
 #include "grSim_Commands.pb.h"
 #include "grSim_Replacement.pb.h"
 #include "messages_robocup_ssl_wrapper.pb.h"
 #include "messages_robocup_ssl_geometry.pb.h"
 #include "messages_robocup_ssl_detection.pb.h"
-#include "fieldstate.h"
+#include "Classes/Fieldstate.h"
+#include "Movement.h"
 #include "../../include/net/robocup_ssl_client.h"
 
 class MainWindow : public QDialog
@@ -33,13 +37,16 @@ class MainWindow : public QDialog
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    void executarPrograma();
+
 public slots:
-    void reconnectUdp();
-    void sendPacket();
-    void sendBtnClicked();
-    void resetBtnClicked();
-    void disconnectUdp();
-    void updateFieldState();
+    void reconnectUdp();//Reconecta o socket
+    void sendPacket();//Envia Pacote
+    void sendBtnClicked();//Botão send foi clicado
+    void resetBtnClicked();//Botão reset foi clicado
+    void disconnectUdp();//Disconecta o socket
+    void updateFieldState();//Atualiza o fieldState
+
 private:
     bool sending, reseting;
     QUdpSocket udpsocket;
@@ -65,6 +72,7 @@ private:
     QPushButton* btnConnect;
     QTimer* timer;
     Fieldstate *field;
+    Movement *moviment;
     RoboCupSSLClient *SSL_Client;
 };
 

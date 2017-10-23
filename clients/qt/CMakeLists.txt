@@ -33,8 +33,17 @@ add_executable(${app} MACOSX_BUNDLE
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    fieldstate.cpp
-    fieldstate.h
+    Movement.cpp
+    Movement.h
+    Classes/Geometrics.cpp
+    Classes/Geometrics.h
+    Classes/config.h
+    Classes/Robot.cpp
+    Classes/Robot.h
+    Classes/Ball.cpp
+    Classes/Ball.h
+    Classes/Fieldstate.cpp
+    Classes/Fieldstate.h
     ../../include/net/robocup_ssl_client.h
     ../../src/net/robocup_ssl_client.cpp
 )

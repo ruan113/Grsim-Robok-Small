@@ -65,9 +65,13 @@ MainWindow::MainWindow(QWidget *parent)
 
     //FieldState
     field = new Fieldstate();
+    //Movimentação
+    moviment = new Movement();
 
+    //Aloca Socket para pegar informações dos robos
     this->SSL_Client = new RoboCupSSLClient(10020,"224.5.23.2","");
 
+    //Estabelece a conexão com o servidor
     if(!this->SSL_Client->open()){
         std::printf("Falha ao abrir a conexão com o servidor!\n");
         return;
@@ -105,7 +109,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(edtIp, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(edtPort, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(timer, SIGNAL(timeout()), this, SLOT(sendPacket()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(updateFieldState()));
     connect(btnConnect, SIGNAL(clicked()), this, SLOT(reconnectUdp()));
     connect(btnSend, SIGNAL(clicked()), this, SLOT(sendBtnClicked()));
     connect(btnReset, SIGNAL(clicked()), this, SLOT(resetBtnClicked()));
@@ -169,13 +172,15 @@ void MainWindow::reconnectUdp()
 
 void MainWindow::sendPacket()
 {
+    //Se o programa esta resentando
     if (reseting)
     {
-        sendBtnClicked();
-        reseting = false;
+        sendBtnClicked();//Atualiza o botão send
+        reseting = false;//Seta como falso o estado de reset
     }
-    grSim_Packet packet;
-    bool yellow = false;
+
+    grSim_Packet packet;//Cria uma variavel para armazenar os valores do pacote
+    bool yellow = false;//Variavel que verificará se o robo é do time amarelo ou não
     if (cmbTeam->currentText()=="Yellow") yellow = true;
     packet.mutable_commands()->set_isteamyellow(yellow);
     packet.mutable_commands()->set_timestamp(0.0);
@@ -204,39 +209,49 @@ void MainWindow::sendPacket()
 
 void MainWindow::updateFieldState(){
 
-    int numBlue,numYellow;
+    int numBlue,numYellow;//Variaveis que armazenam o tamanho dos vetores de robos no diagrama
 
-    this->SSL_Client->changePort(30011);
+    this->SSL_Client->changePort(30011);//Muda a porta para a leitura dos dados dos robos Azuis
 
-    SSL_WrapperPacket robotPacket;
+    //A classe wrapper é responsável por englobar todas as outras classes em uma só,
+    //por isso usamos ela aqui!
+    SSL_WrapperPacket robotPacket;//Aloca uma variavel para receber um pacote com as informações
 
+    //Checamos se o pacote conseguiu ser lido e transferido para a variavel
     if(!this->SSL_Client->receive(robotPacket)){
         std::printf("Erro ao ler o datagrama!\n");
         return;
     }
 
+    //Checa se este pacote possui uma classe Detection que é responsável por ter os dados
+    //em relação a robos e a bola!
     if(robotPacket.has_detection()){
         SSL_DetectionFrame detection = robotPacket.detection();
         numBlue = detection.robots_blue_size();
-        field->fieldUpdate(&detection, 0);
+        field->fieldUpdate(&detection, 0);//Atualiza o field com base nos robos azuis
     }
 
-    this->SSL_Client->changePort(30012);
+    this->SSL_Client->changePort(30012);//Muda a porta para a leitura dos dados dos robos Amarelos
 
+    //Checamos se o pacote conseguiu ser lido e transferido para a variavel
     if(!this->SSL_Client->receive(robotPacket)){
         std::printf("Erro ao ler o datagrama!\n");
         return;
     }
 
+    //Checa se este pacote possui uma classe Detection que é responsável por ter os dados
+    //em relação a robos e a bola!
     if(robotPacket.has_detection()){
         SSL_DetectionFrame detection = robotPacket.detection();
         numYellow = detection.robots_yellow_size();
-        field->fieldUpdate(&detection, 1);
+        field->fieldUpdate(&detection, 1);//Atualiza o field com base nos robos Amarelos
     }
 
+
+    //Esta parte é referente a printar os valores na tela!
     QString output = "Confidence\tX\tY\n";
 
-    output += QString::number(field->ball.confidence)+QString("\t")
+    output += QString::number(field->ball.mensure_confidence)+QString("\t")
             +QString::number(field->ball.position.x)+QString("\t")
             +QString::number(field->ball.position.y)+QString("\n\n");
 
@@ -263,5 +278,14 @@ void MainWindow::updateFieldState(){
 
     txtInfo->setText(output);
 
+    this->executarPrograma();
+}
 
+void MainWindow::executarPrograma(){
+    for(int i=0; i<6; i++) {
+        field->blue[i].calculateMovement(field);
+        field->blue[i].calculateWheels();
+    }
+
+    moviment->sendCommands(this->field);
 }
