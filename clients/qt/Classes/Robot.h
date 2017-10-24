@@ -10,7 +10,6 @@
 #include <cstdio>
 #include "config.h"
 #include "Geometrics.h"
-#include "Fieldstate.h"
 
 class Robot {
 public:

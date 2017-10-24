@@ -108,7 +108,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(edtIp, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
     connect(edtPort, SIGNAL(textChanged(QString)), this, SLOT(disconnectUdp()));
-    connect(timer, SIGNAL(timeout()), this, SLOT(sendPacket()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateFieldState()));
     connect(btnConnect, SIGNAL(clicked()), this, SLOT(reconnectUdp()));
     connect(btnSend, SIGNAL(clicked()), this, SLOT(sendBtnClicked()));
     connect(btnReset, SIGNAL(clicked()), this, SLOT(resetBtnClicked()));

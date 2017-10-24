@@ -1,4 +1,5 @@
 #include "Robot.h"
+#include "Fieldstate.h"
 
 Robot::Robot() {
     this->id = 0;
