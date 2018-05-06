@@ -87,4 +87,3 @@ bool RoboCupSSLClient::receive(SSL_WrapperPacket & packet)
         return false;
     }
 }
-

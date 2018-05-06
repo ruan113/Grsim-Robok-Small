@@ -19,13 +19,15 @@ enum State {
 
 class Fieldstate{
 
-public:   
+public:
     Fieldstate();
     ~Fieldstate();
 
     void fieldUpdate(SSL_DetectionFrame*, int);
 
+    int blue_n;
     Robot blue[6];//Vetor de robos azuis
+    int yellow_n;
     Robot yellow[6];//Vetor de robos Amarelos
 
     Ball ball;//Bola

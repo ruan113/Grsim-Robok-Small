@@ -11,8 +11,6 @@ Robot::Robot() {
 void Robot::calculateMovement(void *fs_i) {
     Fieldstate *fs = (Fieldstate *) fs_i;
 
-    printf("Estado da partida: %d\n", fs->match_state);
-
     //switch(fs->match_state) {
     //case KICKOFF:
     //	this->strategyKickoff(fs_i);
@@ -144,7 +142,6 @@ void Robot::strategyRun(void *fs_i) {
         Distance2ball = Distance2ball.mpow(this->e_ball_0);
         Distance2ball = Distance2ball * this->Q_ball_0;
         final_vector = final_vector + Distance2ball;
-
         break;
     }
 

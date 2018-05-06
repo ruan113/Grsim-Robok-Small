@@ -43,3 +43,15 @@ clean-all: mkbuilddir
 	cd $(BUILDDIR) && rm -rf *
 run:
 	cd bin/ && ./client && ./grsim
+
+vartypes:
+	cd /../tmp/
+	wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/vartypes/vartypes-0.7.tar.gz
+	tar xfz vartypes-0.7.tar.gz
+	cd vartypes-0.7
+	cd build
+	cmake
+	make 
+	sudo make install
+	rm vartypes-0.7.tar.gz
+	rm -rf vartypes-0.7/

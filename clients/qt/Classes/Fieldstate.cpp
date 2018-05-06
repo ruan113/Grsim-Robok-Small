@@ -98,4 +98,4 @@ void Fieldstate::fieldUpdate(SSL_DetectionFrame* detection, int num){
         }
     }
 }
-
+	
