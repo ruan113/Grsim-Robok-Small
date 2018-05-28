@@ -33,8 +33,6 @@ add_executable(${app} MACOSX_BUNDLE
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    Movement.cpp
-    Movement.h
     Classes/Geometrics.cpp
     Classes/Geometrics.h
     Classes/config.h

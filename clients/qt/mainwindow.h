@@ -32,8 +32,6 @@
 #include "messages_robocup_ssl_detection.pb.h"
 
 #include "Classes/Fieldstate.h"
-#include "Movement.h"
-#include "../../include/net/robocup_ssl_client.h"
 
 class MainWindow : public QDialog
 {
@@ -50,17 +48,14 @@ public:
 
 public slots:
     void reconnectUdp();//Reconecta o socket
-    void sendPacket();//Envia Pacote
+    //void sendPacket();//Envia Pacote
     void sendBtnClicked();//Botão send foi clicado
     void resetBtnClicked();//Botão reset foi clicado
     void disconnectUdp();//Disconecta o socket
     void startProgram();
 
 private:
-    bool sending, reseting;
-    QUdpSocket udpsocket;
-    QHostAddress _addr;
-    quint16 _port;
+    bool sending, reseting,connected;
     QLineEdit* edtIp;
     QLineEdit* edtPort;
     QLineEdit* edtId;
@@ -81,7 +76,6 @@ private:
     QPushButton* btnConnect;
     QTimer* timer;
     Fieldstate *field;
-    Movement *moviment;
     RoboCupSSLClient *SSL_Client;
 };
 

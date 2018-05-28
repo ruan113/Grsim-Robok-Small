@@ -5,10 +5,14 @@
 #include <cstdio>
 #include <vector>
 #include <fstream>
-#include <QtNetwork>
 #include "Ball.h"
 #include "Robot.h"
+
+#include "messages_robocup_ssl_wrapper.pb.h"
+#include "messages_robocup_ssl_geometry.pb.h"
 #include "messages_robocup_ssl_detection.pb.h"
+
+#include "../../../include/net/robocup_ssl_client.h"
 
 //Possiveis estados
 enum State {
@@ -23,7 +27,9 @@ public:
     Fieldstate();
     ~Fieldstate();
 
-    void fieldUpdate(SSL_DetectionFrame*, int);
+    void fieldUpdate();
+
+    RoboCupSSLClient *client;
 
     int blue_n;
     Robot blue[6];//Vetor de robos azuis

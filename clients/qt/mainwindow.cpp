@@ -2,8 +2,7 @@
 #include <stdio.h>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QDialog(parent),
-    udpsocket(this)
+    : QDialog(parent)
 {
     //Titulo da tela
     this->setWindowTitle(QString("Robok Small Simulator - v1.2"));
@@ -14,8 +13,8 @@ MainWindow::MainWindow(QWidget *parent)
     QGridLayout* layout = new QGridLayout(this);
 
     //Caixas de text para edição
-    edtIp = new QLineEdit("127.0.0.1", this);
-    edtPort = new QLineEdit("20011", this);
+    edtIp = new QLineEdit("224.5.23.2", this);
+    edtPort = new QLineEdit("10020", this);
     edtId = new QLineEdit("0", this);
     edtObjx = new QLineEdit("0", this);
     edtObjy = new QLineEdit("0", this);
@@ -65,17 +64,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     //FieldState
     field = new Fieldstate();
-    //Movimentação
-    moviment = new Movement();
 
     //Aloca Socket para pegar informações dos robos
-    this->SSL_Client = new RoboCupSSLClient(10020,"224.5.23.2","");
-
-    //Estabelece a conexão com o servidor
-    if(!this->SSL_Client->open()){
-        std::printf("Falha ao abrir a conexão com o servidor!\n");
-        return;
-    }
+    SSL_Client = new RoboCupSSLClient(10020,"224.5.23.2","");
 
     //---------------------Adição dos componentes na tela---------------------//
 
@@ -116,16 +107,18 @@ MainWindow::MainWindow(QWidget *parent)
     chkVel->setChecked(true);//Estado inicial como "Marcado/Selecionado"
     sending = false;//Estado inicial é falso
     reseting = false;//Estado inicial é falso
+    connected = false;
 }
 
 MainWindow::~MainWindow()
 {
-    this->SSL_Client->close();
+    //SSL_Client->close();
 }
 
 void MainWindow::disconnectUdp()
 {
-    udpsocket.close();
+    //SSL_Client->close();
+    connected = false;
     sending = false;
     btnSend->setText("Send");
     btnSend->setDisabled(true);
@@ -162,84 +155,19 @@ void MainWindow::resetBtnClicked()
 
 void MainWindow::reconnectUdp()
 {
-    _addr = edtIp->text();
-    _port = edtPort->text().toUShort();
-    btnSend->setDisabled(false);
-}
-
-void MainWindow::sendPacket()
-{
-    //Se o programa esta resentando
-    if (reseting)
-    {
-        sendBtnClicked();//Atualiza o botão send
-        reseting = false;//Seta como falso o estado de reset
+    if(!connected){
+      btnConnect->setText("Disconnect");
+      btnSend->setDisabled(false);
+      connected = true;
+    }else{
+      disconnectUdp();
+      btnConnect->setText("Connect");
     }
-
-    grSim_Packet packet;//Cria uma variavel para armazenar os valores do pacote
-    bool yellow = false;//Variavel que verificará se o robo é do time amarelo ou não
-    if (cmbTeam->currentText()=="Yellow") yellow = true;
-    packet.mutable_commands()->set_isteamyellow(yellow);
-    packet.mutable_commands()->set_timestamp(0.0);
-    grSim_Robot_Command* command = packet.mutable_commands()->add_robot_commands();
-    command->set_id(edtId->text().toInt());
-
-    command->set_wheelsspeed(!chkVel->isChecked());
-    command->set_wheel1(edtV1->text().toDouble());
-    command->set_wheel2(edtV2->text().toDouble());
-    command->set_wheel3(edtV3->text().toDouble());
-    command->set_wheel4(edtV4->text().toDouble());
-    command->set_velangular(edtW->text().toDouble());
-
-    command->set_kickspeedx(edtKick->text().toDouble());
-    command->set_kickspeedz(edtChip->text().toDouble());
-    command->set_spinner(chkSpin->isChecked());
-
-    QByteArray dgram;
-    dgram.resize(packet.ByteSize());
-    packet.SerializeToArray(dgram.data(), dgram.size());
-    udpsocket.writeDatagram(dgram, _addr, _port);
-
 }
 
 void MainWindow::updateFieldState(){
 
-    SSL_Client->changePort(30011);//Muda a porta para a leitura dos dados dos robos Azuis
-
-    //A classe wrapper é responsável por englobar todas as outras classes em uma só,
-    //por isso usamos ela aqui!
-    SSL_WrapperPacket robotPacket;//Aloca uma variavel para receber um pacote com as informações
-
-    //Checamos se o pacote conseguiu ser lido e transferido para a variavel
-    if(!SSL_Client->receive(robotPacket)){
-        std::printf("Erro ao ler o datagrama do robo Azul!\n");
-        return;
-    }
-
-    //Checa se este pacote possui uma classe Detection que é responsável por ter os dados
-    //em relação a robos e a bola!
-    if(robotPacket.has_detection()){
-        SSL_DetectionFrame detection = robotPacket.detection();
-        field->blue_n = detection.robots_blue_size();
-        field->fieldUpdate(&detection, 0);//Atualiza o field com base nos robos azuis
-    }
-
-    SSL_Client->changePort(30012);//Muda a porta para a leitura dos dados dos robos Amarelos
-
-    //Checamos se o pacote conseguiu ser lido e transferido para a variavel
-    if(!SSL_Client->receive(robotPacket)){
-        std::printf("Erro ao ler o datagrama do robo Amarelo!\n");
-        return;
-    }
-
-    //Checa se este pacote possui uma classe Detection que é responsável por ter os dados
-    //em relação a robos e a bola!
-    if(robotPacket.has_detection()){
-        SSL_DetectionFrame detection = robotPacket.detection();
-        field->yellow_n = detection.robots_yellow_size();
-        field->fieldUpdate(&detection, 1);//Atualiza o field com base nos robos Amarelos
-    }
-
+    field->fieldUpdate();
 
     //Esta parte é referente a printar os valores na tela!
     QString output = "Confidence\tX\tY\n";
@@ -251,27 +179,21 @@ void MainWindow::updateFieldState(){
     output += "ID\tOrientation\tX\tY\n";
 
     output += "Yellow Team: \n";
-    for(int i = 0;i < field->yellow_n;i++){
-
+    for(int i = 0;i < 6;i++){
         output += QString::number(field->yellow[i].id)+QString("\t")
                 +QString::number(field->yellow[i].orientation)+QString("\t")
                 +QString::number(field->yellow[i].position.x)+QString("\t")
                 +QString::number(field->yellow[i].position.y)+QString("\n");
-
     }
     output += "Blue Team: \n";
-    for(int i = 0;i < field->blue_n;i++){
-
+    for(int i = 0;i < 6;i++){
         output += QString::number(field->blue[i].id)+QString("\t")
                 +QString::number(field->blue[i].orientation)+QString("\t")
                 +QString::number(field->blue[i].position.x)+QString("\t")
                 +QString::number(field->blue[i].position.y)+QString("\n");
-
     }
 
     txtInfo->setText(output);
-
-    SSL_Client->changePort(20011);
 }
 
 void MainWindow::command(bool yellow, int id, double wheel1, double wheel2, double wheel3, double wheel4, double kickspeedx, double kickspeedz) {
@@ -306,7 +228,7 @@ void MainWindow::command(bool yellow, int id, double wheel1, double wheel2, doub
     QByteArray dgram;
     dgram.resize(packetGRSim.ByteSize());
     packetGRSim.SerializeToArray(dgram.data(), dgram.size());
-    udpsocket.writeDatagram(dgram, *UdpNet_address, UdpPort);
+    _socket->writeDatagram(dgram, *UdpNet_address, UdpPort);
     /** Fim **/
 }
 
@@ -322,7 +244,6 @@ void MainWindow::MoverPara(double x, double y, float rRotation, double rX, doubl
     // ficar em direção ao ponto desejado.
     Angulo = (180 / M_PI) * atan2(y - rY, x - rX);
     Theta = Angulo - (rRotation * (180 / M_PI));
-    printf("Dist %.3f rRotation %.3f ang %.3f theta %.3f\n", Dist, rRotation, Angulo, Theta);
 
     // Ajusta o ângulo.
     while (Theta > 180) Theta -= 360;
@@ -359,7 +280,6 @@ void MainWindow::MoverPara(double x, double y, float rRotation, double rX, doubl
         vr = VELOCIDADEMAXIMA * (1.0 - exp(-Dist / 20));
     }
 
-    printf("dist %.3f k %.3f Theta %.3f vl %.3f vr %.3f \n", Dist, k, ModTheta, vl, vr);
     command(rColor, rId, -vr, -vr, vl, vl, 0, 0);
 }
 
@@ -372,23 +292,23 @@ void MainWindow::startProgram() {
 
         printf("checando time\n");
         if(cmbTeam->currentText() == "Yellow"){
-            printf("AMARELO\n");
-            for (int i = 0; i < field->yellow_n; i++) {
-                if(field->yellow[i].id >= edtId->text().toInt()){
-                  printf("ACHOU AMARELO\n");
-                  printf("X: %f\nY: %f\n",field->yellow[i].position.x, field->yellow[i].position.y  );
-                  MoverPara(edtObjx->text().toDouble(),edtObjy->text().toDouble(), field->yellow[i].orientation, field->yellow[i].position.x, field->yellow[i].position.y,true,i);
-                }
+            for (int i = 0; i < 6; i++) {
+                printf("ACHOU AMARELO\n");
+                MoverPara(field->ball.position.x,field->ball.position.y,field->yellow[i].orientation, field->yellow[i].position.x, field->yellow[i].position.y,true,i);
             }
         }else{
-            printf("AZUL\n");
-            for (int i = 0; i < field->blue_n; i++) {
-                if(field->blue[i].id >= edtId->text().toInt()){
-                  printf("ACHOU AZUL\n");
-                  MoverPara(edtObjx->text().toDouble(),edtObjy->text().toDouble(), field->blue[i].orientation, field->blue[i].position.x, field->blue[i].position.y,false,i);
-                }
+            for (int i = 0; i < 6; i++) {
+                printf("ACHOU AZUL\n");
+                MoverPara(field->ball.position.x,field->ball.position.y, field->blue[i].orientation, field->blue[i].position.x, field->blue	[i].position.y,false,i);
+
             }
+
         }
+
+    }
+
+}
+
         /*
         if (SSL_Client->receive(packet)) {
             printf("-----Received Wrapper Packet---------------------------------------------\n");
@@ -471,6 +391,3 @@ void MainWindow::startProgram() {
                 }
             }
         }*/
-    }
-    return;
-}

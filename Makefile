@@ -41,9 +41,17 @@ clean: mkkbuilddir cmake
 	
 clean-all: mkbuilddir
 	cd $(BUILDDIR) && rm -rf *
-run:
-	cd bin/ && ./client && ./grsim
 
+buildVision:
+	cd ssl-vision-master/
+	make build
+	cd ..
+
+run: 
+	gnome-terminal -e ./bin/grsim
+	gnome-terminal -e ./bin/client	
+	gnome-terminal -e ./ssl-vision-master/bin/client	
+	
 vartypes:
 	cd /../tmp/
 	wget https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/vartypes/vartypes-0.7.tar.gz
