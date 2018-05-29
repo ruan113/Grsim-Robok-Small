@@ -42,9 +42,10 @@ add_executable(${app} MACOSX_BUNDLE
     Classes/Ball.h
     Classes/Fieldstate.cpp
     Classes/Fieldstate.h
+    Classes/Movement.cpp
+    Classes/Movement.h
     ../../include/net/robocup_ssl_client.h
     ../../src/net/robocup_ssl_client.cpp
 )
 
 target_link_libraries(${app} ${libs})
-

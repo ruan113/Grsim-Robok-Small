@@ -11,17 +11,11 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QPushButton>
-#include <QtNetwork>
-#include <QUdpSocket>
 #include <vector>
 #include <QGridLayout>
 #include <QDebug>
 #include <QMessageBox>
 #include <string>
-#include <math.h>
-#include <QThread>
-
-#define VELOCIDADEMAXIMA 50
 
 //Bibliotecas Grsim
 #include "grSim_Packet.pb.h"
@@ -76,7 +70,6 @@ private:
     QPushButton* btnConnect;
     QTimer* timer;
     Fieldstate *field;
-    RoboCupSSLClient *SSL_Client;
 };
 
 #endif // MAINWINDOW_H
