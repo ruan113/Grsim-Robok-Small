@@ -26,6 +26,7 @@
 #include "messages_robocup_ssl_detection.pb.h"
 
 #include "Classes/Fieldstate.h"
+#include "Classes/Movement.h"
 
 class MainWindow : public QDialog
 {
