@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
     layout->addWidget(txtInfo, 10, 1, 4, 4);
     //Inicializa Timer
     timer = new QTimer (this);
-    timer->setInterval(120);//Seta seu intervalo = 20 milesegundos
+    timer->setInterval(0);//Seta seu intervalo = 20 milesegundos
 
     //---------------Conecção dos Slots com seus respectivos Sinais----------//
 
@@ -206,6 +206,7 @@ void MainWindow::startProgram() {
         //field->fieldUpdate();
 
         printf("checando time\n");
+        /*
         if(cmbTeam->currentText() == "Yellow"){
             for (int i = 0; i < 6; i++) {
                 printf("ACHOU AMARELO\n");
@@ -217,8 +218,10 @@ void MainWindow::startProgram() {
                 rCommand.MoverPara(field->ball.position.x,field->ball.position.y, field->blue[i].orientation, field->blue[i].position.x, field->blue	[i].position.y,false,i);
 
             }
-
         }
+        */
+        rCommand.MoverPara(field->ball.position.x,field->ball.position.y,field->yellow[0].orientation, field->yellow[0].position.x, field->yellow[0].position.y,true,0);
+
 
     }
 

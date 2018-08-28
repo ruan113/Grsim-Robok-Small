@@ -18,5 +18,4 @@ class Movement{
   public:
     void command(bool yellow, int id, double wheel1, double wheel2, double wheel3, double wheel4, double kickspeedx, double kickspeedz);
     void MoverPara(double x, double y, float rRotation, double rX, double rY, bool rColor, int rId);
-
 };

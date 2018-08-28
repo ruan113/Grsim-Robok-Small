@@ -1,4 +1,4 @@
-#include "Movement.h";
+#include "Movement.h"
 
 void Movement::command(bool yellow, int id, double wheel1, double wheel2, double wheel3, double wheel4, double kickspeedx, double kickspeedz) {
     printf("Comando\n");
@@ -40,20 +40,25 @@ void Movement::MoverPara(double x, double y, float rRotation, double rX, double 
     printf("movendo\n");
 
     // Declara variáveis.
-    float k, Theta, Angulo, Dist, vr, vl, ModTheta;
+    float k = 0, Theta, Angulo, Dist, vr, vl, ModTheta;
     // Calcula a distância entre o robo e o ponto desejado.
     Dist = sqrt((x - rX)*(x - rX) + (y - rY)*(y - rY));
 
     // Calcula quantos graus o robô deve girar para
     // ficar em direção ao ponto desejado.
-    Angulo = (180 / M_PI) * atan2(y - rY, x - rX);
-    Theta = Angulo - (rRotation * (180 / M_PI));
+    //atan2 retorna o angulo entre as duas posicoes, porem em radio
+    //Para que fique em graus, multiplica-se esse angulo por (180/PI)
+    Angulo = (180 / M_PI) * atan2(y - rY, x - rX);//Angulo entre dois pontos
+    Theta = Angulo - (rRotation * (180 / M_PI));//Angulo relativo entre os pontos
 
     // Ajusta o ângulo.
     while (Theta > 180) Theta -= 360;
     while (Theta < -180) Theta += 360;
-    // ModTheta = |theta|.
+    // ModTheta =1 |theta|.
     ModTheta = fabs(Theta);
+
+    if(rColor)
+      printf("amarelo");
 
     // Determina a velocidade de rotação
     // de acordo com o módulo do ângulo
@@ -61,21 +66,38 @@ void Movement::MoverPara(double x, double y, float rRotation, double rX, double 
     // OBS: Esses valores podem ser alterados para
     // alterar a velocidade de rotação
     // do robô enquanto ele vai de encontro ao ponto (x,y).
-    if (ModTheta > 100)
+
+    if (ModTheta > 100.0){
         k = 0.50 * VELOCIDADEMAXIMA;
-    else if (ModTheta > 90)
+    }else{
+      if (ModTheta > 90.0){
         k = 0.35 * VELOCIDADEMAXIMA;
-    else if (ModTheta > 50)
-        k = 0.20 * VELOCIDADEMAXIMA;
-    else if (ModTheta > 20)
-        k = 0.15 * VELOCIDADEMAXIMA;
-    else if (ModTheta >= 1)
-        k = 0.1 * VELOCIDADEMAXIMA;
-    else
-        k = 0;
+      }else{
+        if (ModTheta > 50.0){
+          k = 0.20 * VELOCIDADEMAXIMA;
+        }else{
+          if (ModTheta > 20.0){
+            k = 0.15 * VELOCIDADEMAXIMA;
+          }else{
+            if (ModTheta > 1.0){
+              k = 0.1 * VELOCIDADEMAXIMA;
+            }else{
+              k = 0;
+            }
+          }
+        }
+      }
+    }
+
+    printf("-----------------------------\nK = %f\nmodTheta = %f\nTheta = %f\nDist = %f\nAngulo = %f\nObj = (%f,%f)\nRobo = (%f,%f)\n"
+      ,k,ModTheta,Theta,Dist,Angulo,x,y,rX,rY);
+
+
     // Define o valor da velocidade para a roda esquerda e direita.
     // A velocidade diminui conforme o jogador se aproxima do alvo e
     // a rotação do robô diminui conforme o ângulo diminui.
+    //Theta > 0 = (objetivo a esquerda) do contrario, a direita
+    /*
     if (Theta > 0) {
         vl = VELOCIDADEMAXIMA * (1.0 - exp(-Dist / 20));
         vr = (VELOCIDADEMAXIMA - 2 * k)*(1.0 - exp(-Dist / 20));
@@ -83,6 +105,17 @@ void Movement::MoverPara(double x, double y, float rRotation, double rX, double 
         vl = (VELOCIDADEMAXIMA - 2 * k)*(1.0 - exp(-Dist / 20));
         vr = VELOCIDADEMAXIMA * (1.0 - exp(-Dist / 20));
     }
+    */
+
+    if (ModTheta < 60) {
+        vl = VELOCIDADEMAXIMA * (1.0 - exp(-Dist / 20));
+        vr = (VELOCIDADEMAXIMA - 2 * k)*(1.0 - exp(-Dist / 20));
+    } else {
+        vl = (VELOCIDADEMAXIMA - 2 * k)*(1.0 - exp(-Dist / 20));
+        vr = VELOCIDADEMAXIMA * (1.0 - exp(-Dist / 20));
+    }
+
+    printf("********************************\nVl = %f\nVr = %f\n",vl,vr);
 
     command(rColor, rId, -vr, -vr, vl, vl, 0, 0);
 }
